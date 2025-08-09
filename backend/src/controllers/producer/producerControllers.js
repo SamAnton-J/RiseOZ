@@ -1,6 +1,6 @@
 const { Job } = require('../../models/job');
 const { Producer } = require('../../models/producer');
-const { verifyTransactionOnPolygonscan } = require('../../blockchain/verifyTx');
+const { verifyTransactionOnEtherscanSepolia } = require('../../blockchain/verifyTx');
 
 // SIMPLE CRUD BABYYYYYYYYYY, TODO - Check these routes on POSTMAN + Do Things related to profile building and updating profile => Both Producer and Freelancer
 // LETS START BY CREATING YOUR PROFILE => This thing, Most probably will be taken care of in the frontend
@@ -16,12 +16,12 @@ const createJobPost = async (req, res) => {
         const producer = await Producer.findOne({ username: req.user.username });
         const jobPayload = { ...req.body, producer: producer._id };
 
-        // Optional verify tx if provided
+        // Optional verify tx on Etherscan Sepolia if provided
         if (req.body.transactionHash) {
             try {
-                const verify = await verifyTransactionOnPolygonscan(
+                const verify = await verifyTransactionOnEtherscanSepolia(
                     req.body.transactionHash,
-                    process.env.POLYGONSCAN_API_KEY || ''
+                    process.env.ETHERSCAN_API_KEY || ''
                 );
                 if (!verify.ok) {
                     // Do not hard fail for MVP; just log and continue

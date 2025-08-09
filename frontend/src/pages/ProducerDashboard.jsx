@@ -72,16 +72,25 @@ const ProducerDashboard = () => {
     // Create Job Form State:
     const [title, setTitle] = useState('')
     const [description, setDescription] = useState('')
-    const [requirements, setRequirements] = useState([''])
-    const [skillsRequired, setSkillsRequired] = useState([''])
+    const [requirements, setRequirements] = useState('')
+    const [skillsRequired, setSkillsRequired] = useState('')
     const [employmentType, setEmploymentType] = useState('')
     const [location, setLocation] = useState('')
     const [salary, setSalary] = useState('')
 
     const handleJobFormSubmit = async (e) => {
         e.preventDefault();
-        const requirementsArray = requirements.split('\n').map((item) => item.trim()).filter(Boolean);
-        const skillsRequiredArray = skillsRequired.split('\n').map((item) => item.trim()).filter(Boolean);
+        const requirementsArray = typeof requirements === 'string'
+            ? requirements.split('\n').map((item) => item.trim()).filter(Boolean)
+            : [];
+        const skillsRequiredArray = typeof skillsRequired === 'string'
+            ? skillsRequired.split('\n').map((item) => item.trim()).filter(Boolean)
+            : [];
+
+        if (!title?.trim() || !description?.trim()) {
+            alert('Title and Description are required');
+            return;
+        }
 
         try {
             // Check if wallet is connected
@@ -104,28 +113,50 @@ const ProducerDashboard = () => {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
 
-            // Get current network
-            const network = await provider.getNetwork();
+            // Get current network and enforce Ethereum Sepolia (11155111)
+            let network = await provider.getNetwork();
             console.log('Current network:', network);
 
-            // Check if we're on a supported network
-            // Supported networks: Polygon Mumbai (80001), Ethereum Sepolia (11155111), Linea Sepolia (59141)
-            const supportedNetworks = {
-                80001: 'Polygon Mumbai',
-                11155111: 'Ethereum Sepolia',
-                59141: 'Linea Sepolia',
-                1337: 'Local Network',
-                31337: 'Hardhat Network',
-                1: 'Ethereum Mainnet'
-            };
-
-            const networkName = supportedNetworks[network.chainId] || `Chain ${network.chainId}`;
-
-            // Warn if not on a testnet (optional)
-            if (![80001, 11155111, 59141, 1337, 31337].includes(network.chainId)) {
-                const proceed = confirm(`You're on ${networkName}. This will use real funds. Do you want to continue?`);
-                if (!proceed) return;
+            if (network.chainId !== 11155111) {
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: '0xaa36a7' }], // 11155111 in hex
+                    });
+                    // re-read network after switch
+                    network = await provider.getNetwork();
+                } catch (switchError) {
+                    // If the chain has not been added to MetaMask, request to add it
+                    if (switchError.code === 4902) {
+                        try {
+                            await window.ethereum.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [{
+                                    chainId: '0xaa36a7',
+                                    chainName: 'Ethereum Sepolia',
+                                    nativeCurrency: { name: 'Sepolia ETH', symbol: 'ETH', decimals: 18 },
+                                    rpcUrls: ['https://rpc.sepolia.org'],
+                                    blockExplorerUrls: ['https://sepolia.etherscan.io'],
+                                }],
+                            });
+                            network = await provider.getNetwork();
+                        } catch (addError) {
+                            alert('Please switch your MetaMask network to Ethereum Sepolia and try again.');
+                            return;
+                        }
+                    } else {
+                        alert('Please switch your MetaMask network to Ethereum Sepolia and try again.');
+                        return;
+                    }
+                }
             }
+
+            if (network.chainId !== 11155111) {
+                alert('Please switch your MetaMask network to Ethereum Sepolia and try again.');
+                return;
+            }
+
+            const networkName = 'Ethereum Sepolia';
 
             // Get admin wallet address and fee
             const adminWalletAddress = import.meta.env.VITE_ADMIN_WALLET_ADDRESS;
@@ -136,7 +167,7 @@ const ProducerDashboard = () => {
                 return;
             }
 
-            // Create transaction
+            // Create transaction — fixed platform fee to admin wallet on Sepolia
             const tx = {
                 to: adminWalletAddress,
                 value: ethers.utils.parseEther(platformFee),
@@ -167,7 +198,7 @@ const ProducerDashboard = () => {
                 skillsRequired: skillsRequiredArray,
                 employmentType,
                 location,
-                salary,
+                salary: salary ? Number(salary) : undefined,
                 transactionHash: transactionResponse.hash,
                 paymentStatus: 'paid',
                 network: networkName,
@@ -182,8 +213,10 @@ const ProducerDashboard = () => {
 
             // Update UI
             const newJob = data?.job || data;
-            setMyJobPosts((prevJobs) => [...prevJobs, newJob]);
-            setCreated(true);
+            if (newJob) {
+                setMyJobPosts((prevJobs) => [...prevJobs, newJob]);
+            }
+            setCreated((prev) => !prev);
 
             // Clear form
             setTitle('');

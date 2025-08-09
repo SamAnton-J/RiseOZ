@@ -81,28 +81,7 @@ export function useWallet() {
         }
     }, [connect]);
 
-    const connectPhantom = useCallback(async () => {
-        const provider = window.solana;
-        if (!provider || !provider.isPhantom) {
-            throw new Error('Phantom wallet not found. Please install Phantom wallet.');
-        }
-
-        setIsConnecting(true);
-        try {
-            const resp = await provider.connect();
-            const addr = resp?.publicKey?.toString?.() || '';
-            if (!addr) {
-                throw new Error('Failed to get wallet address from Phantom');
-            }
-            setWalletAddress(addr);
-            return addr;
-        } catch (error) {
-            console.error('Phantom connection error:', error);
-            throw new Error(`Phantom connection failed: ${error.message}`);
-        } finally {
-            setIsConnecting(false);
-        }
-    }, []);
+    // Solana/Phantom support removed — project uses MetaMask on Ethereum Sepolia only.
 
     // Function to force refresh wallet connection
     const refreshConnection = useCallback(async () => {
@@ -181,7 +160,6 @@ export function useWallet() {
         chainId,
         isConnecting,
         connect,
-        connectPhantom,
         ensureConnected,
         refreshConnection,
         setWalletAddress
