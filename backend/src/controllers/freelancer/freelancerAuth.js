@@ -4,9 +4,10 @@ const jwt = require('jsonwebtoken');
 const path = require('path');
 const dotenv = require('dotenv');
 
-const envPath = path.resolve(__dirname, '../../.env');
-dotenv.config({ path: envPath });
-
+// Use process.env configured at server entry; do not override path here
+if (!process.env.JWT_SECRET) {
+    dotenv.config();
+}
 const secretKey = process.env.JWT_SECRET;
 
 const freelancerSignup = async (req, res) => {

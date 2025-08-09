@@ -3,7 +3,8 @@ import io from 'socket.io-client';
 import axios from 'axios';
 import '../static/css/components/Chat.css'
 
-const socket = io('http://localhost:3000');
+import { API_BASE_URL } from '../api/config';
+const socket = io(API_BASE_URL);
 
 const Chat = ({ senderId, senderRole, receiverId, receiverRole, receiverUsername }) => {
     const [message, setMessage] = useState('');
@@ -24,14 +25,14 @@ const Chat = ({ senderId, senderRole, receiverId, receiverRole, receiverUsername
         const fetchMessages = async () => {
             try {
                 axios
-                .get(`http://localhost:3000/chat/${senderId}/${senderRole}/${receiverId}/${receiverRole}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                })
-                .then((response) => {
-                    setMessages(response.data);
-                })
+                    .get(`${API_BASE_URL}/chat/${senderId}/${senderRole}/${receiverId}/${receiverRole}`, {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    })
+                    .then((response) => {
+                        setMessages(response.data);
+                    })
             } catch (error) {
                 console.error('Failed to fetch messages:', error);
                 setMessages([]);
@@ -82,21 +83,21 @@ const Chat = ({ senderId, senderRole, receiverId, receiverRole, receiverUsername
                 <div className='chat_section_main'>
                     <div className='chat_section_main_msg_area'>
                         {
-                            Array.isArray(messages) && messages.length > 0 ? 
-                            (
-                                messages.map((msg, index) => {
-                                    // console.log(msg.sender, senderId)
-                                    return (
-                                        <div className={(msg.sender === senderId) ? 'sent_message' : 'received_message'} key={index}>
-                                            <span>{msg.content}</span>
-                                        </div>
-                                    )
-                                })
-                            ) 
-                            : 
-                            (
-                                <span>No Message Yet With {receiverUsername}</span>
-                            )
+                            Array.isArray(messages) && messages.length > 0 ?
+                                (
+                                    messages.map((msg, index) => {
+                                        // console.log(msg.sender, senderId)
+                                        return (
+                                            <div className={(msg.sender === senderId) ? 'sent_message' : 'received_message'} key={index}>
+                                                <span>{msg.content}</span>
+                                            </div>
+                                        )
+                                    })
+                                )
+                                :
+                                (
+                                    <span>No Message Yet With {receiverUsername}</span>
+                                )
                         }
                     </div>
                     <div className='chat_section_main_msg_box'>

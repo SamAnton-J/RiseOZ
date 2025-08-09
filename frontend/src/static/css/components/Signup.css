@@ -1,12 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
 
 .signup_container {
-    height: 32.5rem;
     width: 22.5rem;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-evenly;
+    gap: 1rem;
+    padding: 1.25rem 1rem;
     background-color: #FAFBFD;
     border-radius: 1rem;
     border: 0.5px solid grey;
@@ -23,29 +23,36 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-evenly;
     width: 100%;
-    height: 60%;
+    gap: 0.75rem;
 }
 
-.signup_form_fields input {
-    padding: 0.1rem;
-    width: 80%;
-    height: 17.5%;
-    border-radius: 1rem;
+.signup_form_fields input,
+.signup_form_fields select,
+.signup_form_fields textarea {
+    padding: 0.6rem 0.9rem;
+    width: 85%;
+    min-height: 2.5rem;
+    border-radius: 0.75rem;
     border: 1px solid grey;
-    text-align: center;
+    text-align: left;
     background-color: #FAFBFD;
 }
 
-.signup_form_fields select {
-    padding: 0.1rem;
-    width: 80%;
-    height: 17.5%;
-    border-radius: 1rem;
-    border: 1px solid grey;
-    text-align: center;
-    background-color: #FAFBFD;
+.signup_form_fields textarea {
+    resize: vertical;
+}
+
+.signup_form_fields button {
+    height: 2.5rem;
+    padding: 0.25rem 1rem;
+    font-size: 0.95rem;
+    background-color: #8DD7AB;
+    color: #FAFBFD;
+    border: none;
+    border-radius: 1.5rem;
+    font-weight: 600;
+    cursor: pointer;
 }
 
 .signup_form_submit {

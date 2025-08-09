@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router';
 import axios from 'axios';
+import { API_BASE_URL } from '../api/config';
 import '../static/css/pages/ProducerDashboard.css';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import AddIcon from '@mui/icons-material/Add';
@@ -30,76 +31,76 @@ const ChatView = () => {
     const [selectedUserRole, setSelectedUserRole] = useState('');
 
     useEffect(() => {
-        axios.get('http://localhost:3000/details', {
+        axios.get(`${API_BASE_URL}/details`, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
         })
-        .then(response => {
-            // console.log(response.data)
-            const role = response.data.user.payload.role;
-            localStorage.setItem("role", role);
-            setUserRole(role)
-        })
-        .catch(error => {
-            // console.log(error.response.data)
-            console.error('Error fetching user data:', error);
-        });
+            .then(response => {
+                // console.log(response.data)
+                const role = response.data.user.payload.role;
+                localStorage.setItem("role", role);
+                setUserRole(role)
+            })
+            .catch(error => {
+                // console.log(error.response.data)
+                console.error('Error fetching user data:', error);
+            });
     }, []);
 
     useEffect(() => {
         if (userRole === 'PRODUCER') {
             axios
-            .get(`http://localhost:3000/producer/profile`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-            })
-            .then(response => {
-                // console.log(response.data)
-                setLoggedInUserDetails(response.data)
-                setIsLoading(false)
-            })
-            .catch(error => {
-                console.error('Error fetching user data:', error);
-            });
+                .get(`${API_BASE_URL}/producer/profile`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                })
+                .then(response => {
+                    // console.log(response.data)
+                    setLoggedInUserDetails(response.data)
+                    setIsLoading(false)
+                })
+                .catch(error => {
+                    console.error('Error fetching user data:', error);
+                });
         }
         else if (userRole === 'FREELANCER') {
             axios
-            .get(`http://localhost:3000/freelancer/profile`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-            })
-            .then(response => {
-                // console.log(response.data)
-                setLoggedInUserDetails(response.data)
-                setIsLoading(false)
-            })
-            .catch(error => {
-                console.error('Error fetching user data:', error);
-            });
+                .get(`${API_BASE_URL}/freelancer/profile`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                })
+                .then(response => {
+                    // console.log(response.data)
+                    setLoggedInUserDetails(response.data)
+                    setIsLoading(false)
+                })
+                .catch(error => {
+                    console.error('Error fetching user data:', error);
+                });
         }
-        
+
     }, [userRole]);
 
     useEffect(() => {
         axios
-        .get(`http://localhost:3000/profile-owner-details/${role}/${username}`)
-        .then(response => {
-            // console.log(response.data);
-            setProfileOwnerDetails(response.data);
-            if (userRole === 'PRODUCER') {
-                setChatList(response.data.freelancerConnections);
-            }
-            else if (userRole === 'FREELANCER') {
-                setChatList(response.data.producerConnections);
-            }
-            setIsLoading(false);
-        })
-        .catch(error => {
-            console.error('Error fetching profile owner data: ', error);
-        })
+            .get(`${API_BASE_URL}/profile-owner-details/${role}/${username}`)
+            .then(response => {
+                // console.log(response.data);
+                setProfileOwnerDetails(response.data);
+                if (userRole === 'PRODUCER') {
+                    setChatList(response.data.freelancerConnections);
+                }
+                else if (userRole === 'FREELANCER') {
+                    setChatList(response.data.producerConnections);
+                }
+                setIsLoading(false);
+            })
+            .catch(error => {
+                console.error('Error fetching profile owner data: ', error);
+            })
     }, []);
 
     const handleProfileClick = () => {
@@ -145,43 +146,43 @@ const ChatView = () => {
                         </div>
                         <div className='producer_navbar_right'>
                             {/* <button className="freelancer_chat_button" onClick={handleChatClick}><ChatIcon style={{ fontSize: "2rem" }} /></button> */}
-                            <button className='producer_profile_button' onClick={handleProfileClick}><AccountCircleIcon style={{ fontSize: '2rem' }}/></button>
+                            <button className='producer_profile_button' onClick={handleProfileClick}><AccountCircleIcon style={{ fontSize: '2rem' }} /></button>
                             <button className='producer_navbar_logout' onClick={handleLogout}>Logout</button>
                         </div>
                     </div>
-                            <div className='chat_main_area'>
-                                <div className='chat_list'
-                                    style={{
-                                        overflow: 'hidden', 
-                                        border: '2px solid #fff',
-                                        boxShadow: '0 0 5px rgba(0, 0, 0, 0.3)',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'center',
-                                        paddingBottom: '2.75rem',
-                                    }}
-                                >
-                                    <div className='chat_list_heading'>
-                                        <span>Chat List</span>
-                                    </div>
-                                    <div className='chat_list_main'>
-                                    { 
-                                        chatList.length ?
+                    <div className='chat_main_area'>
+                        <div className='chat_list'
+                            style={{
+                                overflow: 'hidden',
+                                border: '2px solid #fff',
+                                boxShadow: '0 0 5px rgba(0, 0, 0, 0.3)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                paddingBottom: '2.75rem',
+                            }}
+                        >
+                            <div className='chat_list_heading'>
+                                <span>Chat List</span>
+                            </div>
+                            <div className='chat_list_main'>
+                                {
+                                    chatList.length ?
                                         (
                                             chatList.map((user, index) => {
                                                 return (
                                                     <>
                                                         <div className='chat_list_main_card' key={user._id}>
                                                             <div className='chat_list_main_card_left'>
-                                                            <span style={{ color: selectedUserUsername === user.username ? 'rgb(238, 60, 90)' : 'black' }}>
-                                                                {user.username}
-                                                            </span>
+                                                                <span style={{ color: selectedUserUsername === user.username ? 'rgb(238, 60, 90)' : 'black' }}>
+                                                                    {user.username}
+                                                                </span>
                                                             </div>
                                                             <div className='chat_list_main_card_right'>
                                                                 <button onClick={() => handleChatClick(user._id, user.username, user.role)} style={{ padding: '0.7rem 0rem', margin: '0 0.5rem' }}>Chat</button>
                                                             </div>
                                                         </div>
-                                                        
+
                                                     </>
                                                 )
                                             })
@@ -189,36 +190,36 @@ const ChatView = () => {
                                         :
                                         (
                                             loading ?
-                                            (
-                                                <div style={{ height: '100%', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Loading /></div>
-                                            )
-                                            :
-                                            (
-                                                <div style={{ height: '100%', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>No Connected Producers At The Moment</div>
-                                            )
+                                                (
+                                                    <div style={{ height: '100%', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Loading /></div>
+                                                )
+                                                :
+                                                (
+                                                    <div style={{ height: '100%', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>No Connected Producers At The Moment</div>
+                                                )
                                         )
-                                    }
-                                    </div>
-                                </div>
-                                <div 
-                                    className='chat_form'
-                                    style={{
-                                        border: '2px solid #fff',
-                                        boxShadow: '0 0 5px rgba(0, 0, 0, 0.3)',
-                                    }}
-                                >
-                                    {
-                                        isSelected ?
-                                        (
-                                            <Chat senderId = {profileOwnerDetails._id} senderRole = {profileOwnerDetails.role} receiverId = {selectedUserId} receiverUsername = {selectedUserUsername} receiverRole = {selectedUserRole}/>
-                                        )
-                                        :
-                                        (
-                                            <div style={{ height: '100%', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', transform: 'translatey(-27.5px)' }}>No User Selected for Chat</div>
-                                        )
-                                    }
-                                </div>
+                                }
                             </div>
+                        </div>
+                        <div
+                            className='chat_form'
+                            style={{
+                                border: '2px solid #fff',
+                                boxShadow: '0 0 5px rgba(0, 0, 0, 0.3)',
+                            }}
+                        >
+                            {
+                                isSelected ?
+                                    (
+                                        <Chat senderId={profileOwnerDetails._id} senderRole={profileOwnerDetails.role} receiverId={selectedUserId} receiverUsername={selectedUserUsername} receiverRole={selectedUserRole} />
+                                    )
+                                    :
+                                    (
+                                        <div style={{ height: '100%', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', transform: 'translatey(-27.5px)' }}>No User Selected for Chat</div>
+                                    )
+                            }
+                        </div>
+                    </div>
                 </>
             )
         }

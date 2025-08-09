@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router';
 import axios from 'axios';
+import { API_BASE_URL } from '../api/config';
 import '../static/css/pages/ProducerDashboard.css';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import Box from '@mui/material/Box';
@@ -47,7 +48,7 @@ const ProducerDashboard = () => {
     const [incomingConnectionRequests, setIncomingConnectionRequests] = useState([])
     const [created, setCreated] = useState(false)
     const [accepted, setAccepted] = useState(false)
-    const { walletAddress, ensureConnected } = useWallet();
+    const { walletAddress, ensureConnected, chainId } = useWallet();
     const [txHash, setTxHash] = useState('');
 
     // Modal
@@ -83,25 +84,82 @@ const ProducerDashboard = () => {
         const skillsRequiredArray = skillsRequired.split('\n').map((item) => item.trim()).filter(Boolean);
 
         try {
+            // Check if wallet is connected
             const addr = await ensureConnected();
-            if (!addr) throw new Error('Wallet not connected');
-
-            if (!window.ethereum) throw new Error('No wallet provider');
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            await provider.send('eth_requestAccounts', []);
-            const signer = provider.getSigner();
-            if (!import.meta.env.VITE_ADMIN_WALLET_ADDRESS) {
-                throw new Error('Missing VITE_ADMIN_WALLET_ADDRESS');
+            if (!addr) {
+                alert('Please connect your wallet first');
+                return;
             }
-            const tx = {
-                to: import.meta.env.VITE_ADMIN_WALLET_ADDRESS,
-                value: ethers.utils.parseEther(import.meta.env.VITE_PLATFORM_FEE_ETH || '0.001'),
-            };
-            const transactionResponse = await signer.sendTransaction(tx);
-            await transactionResponse.wait();
-            const hash = transactionResponse.hash;
-            setTxHash(hash);
 
+            // Check if MetaMask is available
+            if (!window.ethereum) {
+                alert('MetaMask is not installed. Please install MetaMask and try again.');
+                return;
+            }
+
+            // Request account access
+            await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+            // Create provider and signer
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner();
+
+            // Get current network
+            const network = await provider.getNetwork();
+            console.log('Current network:', network);
+
+            // Check if we're on a supported network
+            // Supported networks: Polygon Mumbai (80001), Ethereum Sepolia (11155111), Linea Sepolia (59141)
+            const supportedNetworks = {
+                80001: 'Polygon Mumbai',
+                11155111: 'Ethereum Sepolia',
+                59141: 'Linea Sepolia',
+                1337: 'Local Network',
+                31337: 'Hardhat Network',
+                1: 'Ethereum Mainnet'
+            };
+
+            const networkName = supportedNetworks[network.chainId] || `Chain ${network.chainId}`;
+
+            // Warn if not on a testnet (optional)
+            if (![80001, 11155111, 59141, 1337, 31337].includes(network.chainId)) {
+                const proceed = confirm(`You're on ${networkName}. This will use real funds. Do you want to continue?`);
+                if (!proceed) return;
+            }
+
+            // Get admin wallet address and fee
+            const adminWalletAddress = import.meta.env.VITE_ADMIN_WALLET_ADDRESS;
+            const platformFee = import.meta.env.VITE_PLATFORM_FEE_ETH || '0.001';
+
+            if (!adminWalletAddress || adminWalletAddress === '0x0000000000000000000000000000000000000000') {
+                alert('Admin wallet address not configured. Please contact support.');
+                return;
+            }
+
+            // Create transaction
+            const tx = {
+                to: adminWalletAddress,
+                value: ethers.utils.parseEther(platformFee),
+                gasLimit: 21000, // Standard gas limit for simple transfers
+            };
+
+            console.log('Sending transaction:', {
+                to: tx.to,
+                value: ethers.utils.formatEther(tx.value),
+                network: networkName
+            });
+
+            // Send transaction
+            const transactionResponse = await signer.sendTransaction(tx);
+            console.log('Transaction sent:', transactionResponse.hash);
+
+            // Wait for confirmation
+            const receipt = await transactionResponse.wait();
+            console.log('Transaction confirmed:', receipt);
+
+            setTxHash(transactionResponse.hash);
+
+            // Create job payload
             const payload = {
                 title,
                 description,
@@ -110,19 +168,24 @@ const ProducerDashboard = () => {
                 employmentType,
                 location,
                 salary,
-                transactionHash: hash,
+                transactionHash: transactionResponse.hash,
                 paymentStatus: 'paid',
-                network: 'Polygon Mumbai',
+                network: networkName,
             };
 
-            const { data } = await axios.post('http://localhost:3000/producer/jobs', payload, {
+            console.log('Creating job with payload:', payload);
+
+            // Create job
+            const { data } = await axios.post(`${API_BASE_URL}/producer/jobs`, payload, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
-            // Some older APIs returned { message, job }, new UI expects a job object array entry
+            // Update UI
             const newJob = data?.job || data;
             setMyJobPosts((prevJobs) => [...prevJobs, newJob]);
             setCreated(true);
+
+            // Clear form
             setTitle('');
             setDescription('');
             setRequirements('');
@@ -130,14 +193,31 @@ const ProducerDashboard = () => {
             setEmploymentType('');
             setLocation('');
             setSalary('');
+
+            alert(`Job created successfully! Transaction: ${transactionResponse.hash}`);
+
         } catch (error) {
             console.error('Error creating job with payment:', error);
-            alert(error?.message || 'Payment or job creation failed');
+
+            // Provide specific error messages
+            if (error.code === 4001) {
+                alert('Transaction was rejected by user');
+            } else if (error.code === -32603) {
+                alert('Network error. Please check your network connection and try again.');
+            } else if (error.message?.includes('insufficient funds')) {
+                alert('Insufficient funds in wallet. Please add more funds and try again.');
+            } else if (error.message?.includes('user rejected')) {
+                alert('Transaction was rejected. Please try again.');
+            } else if (error.message?.includes('nonce')) {
+                alert('Transaction nonce error. Please try again in a few seconds.');
+            } else {
+                alert(`Payment or job creation failed: ${error.message || 'Unknown error'}`);
+            }
         }
     }
 
     useEffect(() => {
-        axios.get('http://localhost:3000/details', {
+        axios.get(`${API_BASE_URL}/details`, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
@@ -161,7 +241,7 @@ const ProducerDashboard = () => {
 
     useEffect(() => {
         axios
-            .get('http://localhost:3000/producer/jobs', {
+            .get(`${API_BASE_URL}/producer/jobs`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -178,7 +258,7 @@ const ProducerDashboard = () => {
 
     useEffect(() => {
         axios
-            .get('http://localhost:3000/all-incoming-connection-requests', {
+            .get(`${API_BASE_URL}/all-incoming-connection-requests`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -196,7 +276,7 @@ const ProducerDashboard = () => {
 
     const handleAcceptConnectionRequest = (incomingConnectionRequest) => {
         axios
-            .patch(`http://localhost:3000/accept-connection-request/${incomingConnectionRequest._id}`,
+            .patch(`${API_BASE_URL}/accept-connection-request/${incomingConnectionRequest._id}`,
                 null, {
                 headers: {
                     Authorization: `Bearer ${token}`

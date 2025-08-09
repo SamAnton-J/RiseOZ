@@ -4,6 +4,7 @@ import '../static/css/pages/SignupPage.css';
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "../api/config";
 
 const SignupPage = () => {
     const [userRole, setUserRole] = useState(localStorage.getItem("role"));
@@ -13,28 +14,28 @@ const SignupPage = () => {
     useEffect(() => {
         const token = localStorage.getItem("token")
         if (token) {
-            axios.get('http://localhost:3000/details', {
+            axios.get(`${API_BASE_URL}/details`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             })
-            .then(response => {
-                console.log(response.data)
-                setToken(token)
-                const role = response.data.user.payload.role;
-                localStorage.setItem("role", role);
-                setUserRole(role)
-            })
-            .catch(error => {
-                // console.log(error.response.data)
-                console.error('Error fetching user data:', error);
-            });
+                .then(response => {
+                    console.log(response.data)
+                    setToken(token)
+                    const role = response.data.user.payload.role;
+                    localStorage.setItem("role", role);
+                    setUserRole(role)
+                })
+                .catch(error => {
+                    // console.log(error.response.data)
+                    console.error('Error fetching user data:', error);
+                });
         }
 
         if (userRole === 'FREELANCER') {
             navigate("/freelancer-dashboard");
         }
-        
+
         else if (userRole === 'PRODUCER') {
             navigate("/producer-dashboard");
         }

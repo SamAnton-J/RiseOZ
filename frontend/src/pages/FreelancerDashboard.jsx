@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import axios from "axios";
+import { API_BASE_URL } from "../api/config";
 import "../static/css/pages/FreelancerDashboard.css";
 import "../static/css/pages/ProducerDashboard.css";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
@@ -75,7 +76,7 @@ const FreelancerDashboard = () => {
     useEffect(() => {
         // ----------------- FETCHING USER DETAILS LIKE ROLE AND USERNAME -----------------
         axios
-            .get("http://localhost:3000/details", {
+            .get(`${API_BASE_URL}/details`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -99,7 +100,7 @@ const FreelancerDashboard = () => {
 
         // ----------------- FETCHING THE JOBS TO SHOW ON THE DASHBOARD -----------------
         axios
-            .get("http://localhost:3000/freelancer/get-job-posts", {
+            .get(`${API_BASE_URL}/freelancer/get-job-posts`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -116,7 +117,7 @@ const FreelancerDashboard = () => {
     useEffect(() => {
         // ----------------- FETCHING THE APPLIED JOBS TO SHOW ON THE DASHBOARD -----------------
         axios
-            .get("http://localhost:3000/freelancer/get-applied-job-posts", {
+            .get(`${API_BASE_URL}/freelancer/get-applied-job-posts`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

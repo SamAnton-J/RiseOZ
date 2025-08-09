@@ -1,10 +1,10 @@
+@import url('https://fonts.googleapis.com/css?family=Poppins');
+
 :root {
     --primary-color: #FAFBFD;
     --secondary-color: #0077B5;
     --button-background-hover: #08bc50;
 }
-
-@import url('https://fonts.googleapis.com/css?family=Poppins');
 
 body {
     font-family: 'Poppins', sans-serif;

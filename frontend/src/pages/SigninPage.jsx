@@ -8,6 +8,7 @@ import { Switch } from "@mui/material";
 import FreelancerSignin from "../components/FreelancerSignin";
 import ProducerSignin from "../components/ProducerSignin";
 import axios from "axios";
+import { API_BASE_URL } from "../api/config";
 
 
 const SigninPage = () => {
@@ -19,28 +20,28 @@ const SigninPage = () => {
     useEffect(() => {
         const token = localStorage.getItem("token")
         if (token) {
-            axios.get('http://localhost:3000/details', {
+            axios.get(`${API_BASE_URL}/details`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             })
-            .then(response => {
-                console.log(response.data)
-                setToken(token)
-                const role = response.data.user.payload.role;
-                localStorage.setItem("role", role);
-                setUserRole(role)
-            })
-            .catch(error => {
-                // console.log(error.response.data)
-                console.error('Error fetching user data:', error);
-            });
+                .then(response => {
+                    console.log(response.data)
+                    setToken(token)
+                    const role = response.data.user.payload.role;
+                    localStorage.setItem("role", role);
+                    setUserRole(role)
+                })
+                .catch(error => {
+                    // console.log(error.response.data)
+                    console.error('Error fetching user data:', error);
+                });
         }
 
         if (userRole === 'FREELANCER') {
             navigate("/freelancer-dashboard");
         }
-        
+
         else if (userRole === 'PRODUCER') {
             navigate("/producer-dashboard");
         }
@@ -57,27 +58,27 @@ const SigninPage = () => {
                 <Navbar />
                 {
                     formType ?
-                    (
-                        <div className="signin_form_container">
-                            <FormControlLabel 
-                            control={<Switch defaultChecked />} 
-                            label={<span style={{ color: 'grey', fontWeight: 'bold' }}>Producer / Freelancer</span>} 
-                            onChange={handleToggle}
-                            />
-                            <FreelancerSignin />
-                        </div>
-                    )
-                    :
-                    (
-                        <div className="signin_form_container">
-                            <FormControlLabel 
-                            control={<Switch defaultChecked />} 
-                            label={<span style={{ color: 'grey', fontWeight: 'bold' }}>Producer / Freelancer</span>}
-                            onChange={handleToggle}
-                            />
-                            <ProducerSignin />
-                        </div>
-                    )
+                        (
+                            <div className="signin_form_container">
+                                <FormControlLabel
+                                    control={<Switch defaultChecked />}
+                                    label={<span style={{ color: 'grey', fontWeight: 'bold' }}>Producer / Freelancer</span>}
+                                    onChange={handleToggle}
+                                />
+                                <FreelancerSignin />
+                            </div>
+                        )
+                        :
+                        (
+                            <div className="signin_form_container">
+                                <FormControlLabel
+                                    control={<Switch defaultChecked />}
+                                    label={<span style={{ color: 'grey', fontWeight: 'bold' }}>Producer / Freelancer</span>}
+                                    onChange={handleToggle}
+                                />
+                                <ProducerSignin />
+                            </div>
+                        )
                 }
             </div>
         )
