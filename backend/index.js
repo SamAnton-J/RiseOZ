@@ -15,8 +15,7 @@ const server = http.createServer(app);
 const allowedOrigins = [
     "http://localhost:5173", 
     "http://127.0.0.1:5173",
-    "https://your-frontend-domain.netlify.app", // Replace with your actual Netlify domain
-    "https://your-frontend-domain.vercel.app"   // Replace with your actual Vercel domain
+    "https://rizeosf.netlify.app/"
 ];
 
 const io = socketIo(server, {
