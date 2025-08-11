@@ -1,3 +1,5 @@
+// backend/src/scripts/seed.js
+
 const bcrypt = require('bcrypt');
 const db = require('../../config/db');
 const { Producer } = require('../models/producer');
@@ -5,6 +7,7 @@ const { Freelancer } = require('../models/freelancer');
 const { Job } = require('../models/job');
 
 async function ensureProducer(seedProducer) {
+    // ... (This function is unchanged)
     const existing = await Producer.findOne({ username: seedProducer.username });
     if (existing) return existing;
     const passwordHash = await bcrypt.hash(seedProducer.password, 10);
@@ -23,9 +26,9 @@ async function ensureProducer(seedProducer) {
 }
 
 async function ensureFreelancers(seedFreelancers) {
+    // ... (This function is unchanged, but we will modify the data passed to it)
     const created = [];
     for (const f of seedFreelancers) {
-        // upsert-like behavior
         let doc = await Freelancer.findOne({ username: f.username });
         if (!doc) {
             const passwordHash = await bcrypt.hash(f.password, 10);
@@ -49,12 +52,14 @@ async function ensureFreelancers(seedFreelancers) {
 }
 
 function pickApplicants(allFreelancers, min = 2, max = 5) {
+    // ... (This function is unchanged)
     const count = Math.max(min, Math.min(max, Math.floor(Math.random() * (max - min + 1)) + min));
     const shuffled = [...allFreelancers].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, count);
 }
 
 async function createJobs(producer, freelancers, seedJobs) {
+    // ... (This function is unchanged, but we will modify the data passed to it)
     const createdJobs = [];
     for (const j of seedJobs) {
         const existing = await Job.findOne({ title: j.title, producer: producer._id });
@@ -83,7 +88,6 @@ async function createJobs(producer, freelancers, seedJobs) {
         await job.save();
         createdJobs.push(job);
 
-        // Update reverse references
         for (const a of applicants) {
             if (!a.appliedJobs) a.appliedJobs = [];
             if (!a.appliedJobs.find((id) => id.toString() === job._id.toString())) {
@@ -93,7 +97,6 @@ async function createJobs(producer, freelancers, seedJobs) {
         }
     }
 
-    // Update producer jobsCreated
     const jobIds = createdJobs.map((j) => j._id);
     const existingIds = (producer.jobsCreated || []).map((id) => id.toString());
     const toAdd = jobIds.filter((id) => !existingIds.includes(id.toString()));
@@ -123,9 +126,11 @@ async function run() {
                 email: 'freelancer01@example.com',
                 firstName: 'Freelancer01',
                 lastName: 'User',
-                bio: 'Experienced full stack developer skilled in building scalable web applications with modern technologies.',
-                skills: ['JavaScript', 'React', 'Node.js', 'Express', 'MongoDB', 'REST API', 'Git'],
+                bio: 'Experienced full stack developer skilled in building scalable web applications with modern technologies like React, Node.js, and Docker.',
+                // MODIFICATION: Added 'Docker' to show a partial match on the DevOps job.
+                skills: ['JavaScript', 'React', 'Node.js', 'Express', 'MongoDB', 'REST API', 'Git', 'Docker'],
             },
+            // ... (Other freelancers are unchanged, but you could add more overlaps if desired)
             {
                 username: 'freelancer02',
                 password: 'Password123!',
@@ -135,6 +140,7 @@ async function run() {
                 bio: 'Data scientist with expertise in machine learning, data analysis, and visualization to extract actionable insights.',
                 skills: ['Python', 'Machine Learning', 'Pandas', 'NumPy', 'Scikit-learn', 'SQL', 'Tableau'],
             },
+            // ... (rest of freelancers 03-10 are unchanged)
             {
                 username: 'freelancer03',
                 password: 'Password123!',
@@ -213,118 +219,57 @@ async function run() {
             {
                 title: 'Full Stack Developer',
                 description: 'We are looking for a passionate Full Stack Developer to design, develop, and maintain web applications with a focus on seamless user experiences. You will work closely with product managers and designers to build scalable software solutions.',
-                requirements: [
-                    'Experience with front-end frameworks (React, Angular, or Vue)',
-                    'Proficient in back-end development using Node.js, Express, or similar frameworks',
-                    'Strong understanding of RESTful APIs and integration',
-                    'Experience working with databases like MongoDB or PostgreSQL',
-                    'Familiarity with Git, CI/CD pipelines, and agile methodologies',
-                ],
-                skillsRequired: [
-                    'JavaScript (ES6+)',
-                    'React.js / Angular / Vue.js',
-                    'Node.js and Express',
-                    'MongoDB / SQL Databases',
-                    'Version control (Git)',
-                    'API design and integration',
-                    'Problem-solving and debugging',
-                ],
+                requirements: [ 'Experience with front-end frameworks like React', 'Proficient in back-end development using Node.js and Express', 'Strong understanding of RESTful APIs', 'Experience with MongoDB', ],
+                // MODIFICATION: Skills are now an exact match to freelancer01's skills for a 100% score.
+                skillsRequired: [ 'JavaScript', 'React', 'Node.js', 'Express', 'MongoDB', 'REST API', 'Git', ],
                 employmentType: 'Full-time',
                 location: 'Remote',
                 salary: 110000,
                 tags: ['fullstack', 'javascript', 'react', 'node'],
             },
             {
-                title: 'Data Scientist',
-                description: 'Join our data team to analyze and interpret complex datasets to help drive strategic decisions. You will build predictive models, perform data visualization, and communicate insights to stakeholders.',
-                requirements: [
-                    'Strong background in statistics and machine learning',
-                    'Experience with Python, R, or similar languages',
-                    'Familiarity with data visualization tools (Matplotlib, Seaborn, Tableau)',
-                    'Knowledge of SQL for data querying',
-                    'Ability to work with large datasets and clean data effectively',
-                ],
-                skillsRequired: [
-                    'Python (NumPy, pandas, scikit-learn)',
-                    'Machine Learning algorithms',
-                    'Data visualization and reporting',
-                    'SQL and database querying',
-                    'Statistical analysis',
-                    'Communication skills to present insights',
-                ],
-                employmentType: 'Full-time',
-                location: 'Remote',
-                salary: 125000,
-                tags: ['data', 'ml', 'python', 'analytics'],
-            },
-            {
                 title: 'DevOps Engineer',
                 description: 'We seek a DevOps Engineer to streamline our software delivery lifecycle by automating infrastructure, deploying updates, and ensuring system reliability and scalability.',
-                requirements: [
-                    'Experience with cloud platforms (AWS, Azure, GCP)',
-                    'Knowledge of containerization tools (Docker, Kubernetes)',
-                    'Familiarity with CI/CD tools like Jenkins, GitHub Actions, or GitLab CI',
-                    'Strong scripting skills (Bash, Python, etc.)',
-                    'Monitoring and logging expertise',
-                ],
-                skillsRequired: [
-                    'Cloud services (AWS, Azure, GCP)',
-                    'Docker and Kubernetes',
-                    'CI/CD pipeline design and automation',
-                    'Infrastructure as Code (Terraform, CloudFormation)',
-                    'Linux system administration',
-                    'Scripting languages',
-                ],
+                requirements: [ 'Experience with cloud platforms (AWS, Azure, GCP)', 'Knowledge of containerization tools (Docker, Kubernetes)', 'Familiarity with CI/CD tools like Jenkins', 'Strong scripting skills (Bash, Python, etc.)', ],
+                // MODIFICATION: Skills overlap with freelancer01 (Docker, Git) for a partial score.
+                skillsRequired: [ 'AWS', 'Docker', 'Kubernetes', 'Git' ],
                 employmentType: 'Full-time',
                 location: 'Remote',
                 salary: 120000,
                 tags: ['devops', 'cloud', 'kubernetes', 'cicd'],
             },
             {
-                title: 'Machine Learning Engineer',
-                description: 'Design and deploy machine learning models into production to solve real-world problems. Collaborate with data scientists and software engineers to build scalable ML pipelines.',
-                requirements: [
-                    'Experience in building and deploying ML models',
-                    'Proficiency in Python and ML frameworks (TensorFlow, PyTorch)',
-                    'Knowledge of model optimization and tuning',
-                    'Understanding of cloud deployment and APIs',
-                    'Strong problem-solving skills',
-                ],
-                skillsRequired: [
-                    'Python and ML libraries',
-                    'TensorFlow / PyTorch',
-                    'Data preprocessing and feature engineering',
-                    'Model deployment (Docker, Flask, FastAPI)',
-                    'Cloud platforms (AWS, GCP, Azure)',
-                    'Version control and collaboration tools',
-                ],
-                employmentType: 'Full-time',
-                location: 'Remote',
-                salary: 130000,
-                tags: ['ml', 'python', 'tensorflow', 'pytorch'],
-            },
-            {
                 title: 'Frontend Developer',
                 description: 'We are looking for a Frontend Developer to create engaging and responsive user interfaces. You will translate UI/UX designs into high-quality code that runs efficiently on all devices.',
-                requirements: [
-                    'Expertise in HTML, CSS, and JavaScript',
-                    'Experience with React, Vue, or Angular frameworks',
-                    'Understanding of responsive design and cross-browser compatibility',
-                    'Familiarity with version control systems',
-                    'Ability to optimize applications for maximum speed',
-                ],
-                skillsRequired: [
-                    'HTML5, CSS3, JavaScript (ES6+)',
-                    'React.js / Vue.js / Angular',
-                    'Responsive and mobile-first design',
-                    'Web performance optimization',
-                    'Git and collaboration workflows',
-                    'Debugging and testing tools',
-                ],
+                requirements: [ 'Expertise in HTML, CSS, and JavaScript', 'Experience with React framework', 'Understanding of responsive design', 'Familiarity with version control systems', ],
+                // MODIFICATION: Skills overlap with freelancer01 (React, JavaScript, Git) for a partial score.
+                skillsRequired: [ 'HTML', 'CSS', 'JavaScript', 'React', 'Git' ],
                 employmentType: 'Full-time',
                 location: 'Remote',
                 salary: 100000,
                 tags: ['frontend', 'javascript', 'react'],
+            },
+            {
+                title: 'Data Scientist',
+                description: 'Join our data team to analyze and interpret complex datasets to help drive strategic decisions. You will build predictive models, perform data visualization, and communicate insights to stakeholders.',
+                requirements: [ 'Strong background in statistics and machine learning', 'Experience with Python or R', 'Knowledge of SQL for data querying', ],
+                // MODIFICATION: No skill overlap with freelancer01, will correctly show a 0% match score.
+                skillsRequired: [ 'Python', 'Machine Learning', 'SQL', 'Tableau' ],
+                employmentType: 'Full-time',
+                location: 'Remote',
+                salary: 125000,
+                tags: ['data', 'ml', 'python', 'analytics'],
+            },
+             {
+                title: 'Machine Learning Engineer',
+                description: 'Design and deploy machine learning models into production to solve real-world problems. Collaborate with data scientists and software engineers to build scalable ML pipelines.',
+                requirements: [ 'Experience in building and deploying ML models', 'Proficiency in Python and ML frameworks (TensorFlow, PyTorch)', 'Knowledge of model optimization and tuning', ],
+                // MODIFICATION: Some skill overlap with freelancer01 (Docker) for a low match score.
+                skillsRequired: [ 'Python', 'TensorFlow', 'Model Deployment', 'Docker' ],
+                employmentType: 'Full-time',
+                location: 'Remote',
+                salary: 130000,
+                tags: ['ml', 'python', 'tensorflow', 'pytorch'],
             },
         ];
 
@@ -336,11 +281,8 @@ async function run() {
     } catch (error) {
         console.error('Seed failed:', error);
     } finally {
-        // Ensure process exits after mongoose connection established by config/db
         setTimeout(() => process.exit(0), 500);
     }
 }
 
 run();
-
-

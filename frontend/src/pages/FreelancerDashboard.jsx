@@ -221,18 +221,12 @@ const FreelancerDashboard = () => {
                                                         {job.location}
                                                     </span>
                                                 </div>
-                                                <div className="producer_dash_job_card_bottom_right">
-                                                    {/* <button onClick={() => navigate(`/job/${job._id}`)}>View</button> */}
-                                                    <span>
-                                                        Posted By{" "}
-                                                        {job.producer.username}
-                                                    </span>
-                                                    <span>
-                                                        On{" "}
-                                                        {new Date(
-                                                            job.postedDate
-                                                        ).toLocaleString()}
-                                                    </span>
+                                                <div className="producer_dash_job_card_bottom_right" style={{display:'flex',gap:'0.75rem',alignItems:'center'}}>
+                                                    <span>Posted By {job.producer.username}</span>
+                                                    <span>On {new Date(job.postedDate).toLocaleString()}</span>
+                                                    {typeof job.matchScore === 'number' && (
+                                                        <span style={{fontWeight:'bold', color:'#2c7'}}>Match: {job.matchScore}%</span>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>

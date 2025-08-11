@@ -208,8 +208,8 @@ const checkConnected = async (req, res) => {
         }
 
         const isConnected = (
-            profileOwner.freelancerConnections.includes(loggedInUserId) ||
-            profileOwner.producerConnections.includes(loggedInUserId)
+            (profileOwner.freelancerConnections || []).some((id) => id.toString() === loggedInUserId) ||
+            (profileOwner.producerConnections || []).some((id) => id.toString() === loggedInUserId)
         );
 
         const pendingRequest = await ConnectionRequest.findOne({
