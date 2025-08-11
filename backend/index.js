@@ -35,13 +35,14 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve frontend static files
+const path = require('path');
+const frontendBuildPath = path.join(__dirname, '../frontend/dist');
+app.use(express.static(frontendBuildPath));
+
 // Health check endpoint for deployment platforms
 app.get('/', (req, res) => {
-    res.json({ 
-        message: 'RiseOZ Backend API is running!',
-        status: 'healthy',
-        timestamp: new Date().toISOString()
-    });
+    res.sendFile(path.join(frontendBuildPath, 'index.html'));
 });
 
 // ROUTES
