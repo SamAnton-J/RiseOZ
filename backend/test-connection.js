@@ -6,6 +6,8 @@ dotenv.config();
 // MongoDB Cloud connection string with properly encoded password
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://rizeos-user-01:rizeos-user-01%40user@rizeos-cluster.lqoxzvd.mongodb.net/?retryWrites=true&w=majority&appName=RizeOS-Cluster';
 
+console.log('Using connection string:', MONGODB_URI);
+
 // Set up Mongoose connection
 mongoose.connect(MONGODB_URI, {
     dbName: 'linkedx',
@@ -20,13 +22,11 @@ db.on('error', (err) => {
 
 db.once('open', () => {
     console.log('Connected to MongoDB Cloud');
+    process.exit(0);
 });
 
-process.on('SIGINT', () => {
-    db.close(() => {
-        console.log('MongoDB connection closed due to process termination');
-        process.exit(0);
-    });
-});
-
-module.exports = db;
+// Timeout after 10 seconds
+setTimeout(() => {
+    console.log('Connection timeout');
+    process.exit(1);
+}, 10000);

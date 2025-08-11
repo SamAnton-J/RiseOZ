@@ -7,6 +7,16 @@ const Message = require('../models/message');
 
 async function run() {
     try {
+        // Wait for database connection to be ready
+        await new Promise((resolve, reject) => {
+            if (db.readyState === 1) {
+                resolve();
+            } else {
+                db.once('open', resolve);
+                db.once('error', reject);
+            }
+        });
+
         await Promise.all([
             Producer.deleteMany({}),
             Freelancer.deleteMany({}),

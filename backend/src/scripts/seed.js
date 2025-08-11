@@ -110,6 +110,16 @@ async function createJobs(producer, freelancers, seedJobs) {
 
 async function run() {
     try {
+        // Wait for database connection to be ready
+        await new Promise((resolve, reject) => {
+            if (db.readyState === 1) {
+                resolve();
+            } else {
+                db.once('open', resolve);
+                db.once('error', reject);
+            }
+        });
+
         const seedProducer = {
             username: 'producer',
             password: 'Password123!',
