@@ -63,9 +63,9 @@ app.use('/chat', require('./src/routes/chatRoute'));
 io.on('connection', (socket) => {
     console.log('New client connected');
     socket.on('join', ({ senderId, senderRole }) => {
-        const room = `${senderRole}-${senderId}`;
+        const room = ${senderRole}-${senderId};
         socket.join(room);
-        console.log(`User ${senderId} with senderRole ${senderRole} joined room ${room}`);
+        console.log(User ${senderId} with senderRole ${senderRole} joined room ${room});
     });
     socket.on('sendMessage', async (messageData) => {
         const { senderId, senderRole, receiverId, receiverRole, content } = messageData;
@@ -80,7 +80,7 @@ io.on('connection', (socket) => {
         });
         await message.save();
         // Emit the message to the receiver
-        const room = `${receiverRole}-${receiverId}`;
+        const room = ${receiverRole}-${receiverId};
         io.to(room).emit('receiveMessage', message);
     });
     socket.on('disconnect', () => {
@@ -89,5 +89,5 @@ io.on('connection', (socket) => {
 });
 
 server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(Server running on port ${PORT});
 });
