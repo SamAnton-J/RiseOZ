@@ -10,22 +10,39 @@ const Message = require('./src/models/message');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const server = http.createServer(app);
+
+// CORS configuration for both development and production
+const allowedOrigins = [
+    "http://localhost:5173", 
+    "http://127.0.0.1:5173",
+    "https://your-frontend-domain.netlify.app", // Replace with your actual Netlify domain
+    "https://your-frontend-domain.vercel.app"   // Replace with your actual Vercel domain
+];
+
 const io = socketIo(server, {
     cors: {
-        origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
+        origin: allowedOrigins,
         methods: ['GET', 'POST'],
         credentials: true
     }
 });
 
-
 require('./config/db');
 app.use(cors({
-    origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
+    origin: allowedOrigins,
     credentials: true
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Health check endpoint for deployment platforms
+app.get('/', (req, res) => {
+    res.json({ 
+        message: 'RiseOZ Backend API is running!',
+        status: 'healthy',
+        timestamp: new Date().toISOString()
+    });
+});
 
 // ROUTES
 const freelancerRoutes = require('./src/routes/freelancerRoute')
